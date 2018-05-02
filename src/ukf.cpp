@@ -12,7 +12,11 @@ using std::vector;
  * This is scaffolding, do not modify
  */
 UKF::UKF() {
-  // if this is false, laser measurements will be ignored (except during init)
+
+    
+  is_initialized_ = false;
+    
+    // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = true;
 
   // if this is false, radar measurements will be ignored (except during init)
@@ -25,10 +29,10 @@ UKF::UKF() {
   P_ = MatrixXd(5, 5);
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 30;
+  std_a_ = 1.75;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 30;
+  std_yawdd_ = 0.5;
   
   //DO NOT MODIFY measurement noise values below these are provided by the sensor manufacturer.
   // Laser measurement noise standard deviation position1 in m
@@ -95,12 +99,15 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
      * Init the state vector, covar matrix if this is the first meassurement
      */
 
+
     if(!is_initialized_) {
+
         P_ << 1, 0, 0, 0, 0,
               0, 1, 0, 0, 0,
               0, 0, 1, 0, 0,
               0, 0, 0, 1, 0,
               0, 0, 0, 0, 1;
+
         if(meas_package.sensor_type_ == MeasurementPackage::RADAR){
             double rho = meas_package.raw_measurements_(0);
             double phi = meas_package.raw_measurements_(1);
@@ -112,12 +119,15 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
             double vy = rho_dot*sin(phi);
             double v = sqrt(vx*vx + vy*vy);
             x_ << px, py, v, 0, 0;
+
         }
 
         else if( meas_package.sensor_type_ == MeasurementPackage::LASER){
             double px = meas_package.raw_measurements_(0);
             double py = meas_package.raw_measurements_(1);
             x_ << px, py, 0, 0,0;
+
+
         }
 
         //Initialize weight vector
@@ -126,16 +136,20 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
             weights_(i) = 0.5 / (n_aug_ + lambda_);
         }
 
+
         //Done initializing, no need to predict or update
         time_us_ = meas_package.timestamp_;
         is_initialized_ = true;
+
         return;
+
 
     }
 
     /***********************************************
      * Prediction
      ***********************************************/
+
     double dt = (meas_package.timestamp_ - time_us_) / 1000000.0;
     time_us_ = meas_package.timestamp_;
 
